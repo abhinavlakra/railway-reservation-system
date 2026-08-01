@@ -1,6 +1,7 @@
 import mongoose, { Schema } from "mongoose";
 import validator from "validator";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
 const userSchema = new Schema({
   name: {
@@ -39,16 +40,50 @@ const userSchema = new Schema({
     enum: ["user", "admin"],
     default: "user",
   },
+  isEmailVerified: {
+    type: Boolean,
+    default: false,
+  },
+  refreshToken: {
+    type: String,
+  },
 });
 
+// password encryption prehook.
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) {
-    return next();
+    return;
   }
 
   this.password = await bcrypt.hash(this.password, 12);
   this.confirmPassword = undefined;
-  next();
 });
+
+// user access token.
+userSchema.methods.getAccessToken = function () {
+  return jwt.sign(
+    {
+      id: this._id,
+      role: this.role,
+    },
+    process.env.ACCESS_TOKEN_SECRET,
+    {
+      expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
+    },
+  );
+};
+
+// user refresh token.
+userSchema.methods.getRefreshToken = function () {
+  return jwt.sign(
+    {
+      id: this._id,
+    },
+    process.env.REFRESH_TOKEN_SECRET,
+    {
+      expiresIn: process.env.REFRESH_TOKEN_EXPIRY,
+    },
+  );
+};
 
 export const User = mongoose.model("User", userSchema);
