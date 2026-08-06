@@ -1,4 +1,5 @@
 import express from "express";
+import cookieParser from "cookie-parser";
 
 const app = express();
 
@@ -7,6 +8,7 @@ app.get("/", (req, res) => {
 });
 
 app.use(express.json());
+app.use(cookieParser());
 
 import authRoute from "./routes/userAuthRoutes.js";
 

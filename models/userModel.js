@@ -24,6 +24,7 @@ const userSchema = new Schema({
   password: {
     type: String,
     required: [true, "please enter your password!"],
+    select: false,
   },
   confirmPassword: {
     type: String,
@@ -84,6 +85,12 @@ userSchema.methods.getRefreshToken = function () {
       expiresIn: process.env.REFRESH_TOKEN_EXPIRY,
     },
   );
+};
+
+// user pasword verification.
+userSchema.methods.comparePasswords = function (enteredPassword) {
+  const check = bcrypt.compare(enteredPassword, this.password);
+  return check;
 };
 
 export const User = mongoose.model("User", userSchema);
