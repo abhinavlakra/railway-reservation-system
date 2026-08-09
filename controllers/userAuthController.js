@@ -99,7 +99,26 @@ export const login = catchAsync(async (req, res) => {
 });
 
 // user logout controller
-export const logout = catchAsync(async (req, res) => {});
+export const logout = catchAsync(async (req, res) => {
+  const user = await User.findById(req.user._id);
+  if (user) {
+    user.refreshToken = undefined;
+    await user.save({ validateBeforeSave: false });
+  }
+
+  const cookieOptions = {
+    httpOnly: true,
+    secure: true,
+  };
+
+  res.clearCookie("accessToken", cookieOptions);
+  res.clearCookie("refreshToken", cookieOptions);
+
+  res.status(200).json({
+    status: "Success",
+    message: "Logged Out succesfully",
+  });
+});
 
 // user forgot password controller.
 export const forgotPassword = catchAsync(async (req, res) => {});
