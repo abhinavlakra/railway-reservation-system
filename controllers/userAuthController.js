@@ -97,3 +97,15 @@ export const login = catchAsync(async (req, res) => {
       message: "User logged in succesfully!",
     });
 });
+
+// user logout controller
+export const logout = catchAsync(async (req, res) => {});
+
+// user forgot password controller.
+export const forgotPassword = catchAsync(async (req, res) => {});
+
+// user reset password controller.
+export const resetPassword = catchAsync(async (req, res) => {});
+
+// user change password controller.
+export const changePassword = catchAsync(async (req, res) => {});

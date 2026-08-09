@@ -1,9 +1,9 @@
 import jwt from "jsonwebtoken";
-import { catchAsync } from "../utils/asyncHandler";
-import { AppError } from "../utils/appError";
-import { User } from "../models/userModel";
+import { catchAsync } from "../utils/asyncHandler.js";
+import { AppError } from "../utils/appError.js";
+import { User } from "../models/userModel.js";
 
-export const verify = catchAsync(async (req, res, next) => {
+export const verifyJWT = catchAsync(async (req, res, next) => {
   const token = req.cookies.accessToken;
 
   if (!token) {
@@ -12,7 +12,7 @@ export const verify = catchAsync(async (req, res, next) => {
 
   const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
 
-  const user = await User.findById(decoded._id);
+  const user = await User.findById(decoded.id);
 
   if (!user) {
     return next(new AppError("User no longer exists!", 401));
