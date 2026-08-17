@@ -2,6 +2,7 @@ import mongoose, { Schema } from "mongoose";
 import validator from "validator";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 
 const userSchema = new Schema({
   name: {
@@ -49,6 +50,14 @@ const userSchema = new Schema({
     type: String,
     select: false,
   },
+  passwordResetToken: {
+    type: String,
+    select: false,
+  },
+  passwordResetExpiry: {
+    type: Date,
+    select: false,
+  },
 });
 
 // password encryption prehook.
@@ -88,7 +97,18 @@ userSchema.methods.getRefreshToken = function () {
   );
 };
 
-// user pasword verification.
+// tokens ( these are non jwt tokens, this is for forgotPassword and resetPassword Controller)
+userSchema.methods.createPasswordResetToken = function () {
+  const token = crypto.randomBytes(32).toString("hex");
+
+  const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+  this.passwordResetToken = hashedToken;
+  this.passwordResetExpiry = Date.now() + 5 * 60 * 1000;
+
+  return token;
+};
+
+// user password verification.
 userSchema.methods.comparePasswords = function (enteredPassword) {
   const check = bcrypt.compare(enteredPassword, this.password);
   return check;
