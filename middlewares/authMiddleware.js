@@ -14,7 +14,9 @@ export const verifyJWT = catchAsync(async (req, res, next) => {
 
   const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
 
-  const user = await User.findById(decoded.id);
+  const user = await User.findById(decoded.id).select(
+    "+password +refreshToken",
+  );
 
   if (!user) {
     return next(new AppError("User no longer exists!", 401));

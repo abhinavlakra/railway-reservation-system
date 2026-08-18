@@ -4,6 +4,16 @@ import { catchAsync } from "../utils/asyncHandler.js";
 import { sendEmail } from "../utils/email.js";
 import crypto from "crypto";
 
+const clearAuthCookies = (res) => {
+  const cookieOptions = {
+    httpOnly: true,
+    secure: true,
+  };
+
+  res.clearCookie("accessToken", cookieOptions);
+  res.clearCookie("refreshToken", cookieOptions);
+};
+
 // User registration controller.
 export const registration = catchAsync(async (req, res) => {
   const { name, email, password, confirmPassword, phone, role } = req.body;
@@ -102,23 +112,17 @@ export const login = catchAsync(async (req, res) => {
 
 // user logout controller
 export const logout = catchAsync(async (req, res) => {
+  console.log("logout controller reached");
   const user = await User.findById(req.user._id);
   if (user) {
     user.refreshToken = undefined;
     await user.save({ validateBeforeSave: false });
   }
 
-  const cookieOptions = {
-    httpOnly: true,
-    secure: true,
-  };
-
-  res.clearCookie("accessToken", cookieOptions);
-  res.clearCookie("refreshToken", cookieOptions);
-
+  clearAuthCookies(res);
   res.status(200).json({
-    status: "Success",
-    message: "Logged Out succesfully",
+    status: "success",
+    message: "Logged out successfully!",
   });
 });
 
@@ -182,5 +186,25 @@ export const resetPassword = catchAsync(async (req, res) => {
   });
 });
 
-// user change password controller.
-export const changePassword = catchAsync(async (req, res) => {});
+// user change-password controller.
+export const changePassword = catchAsync(async (req, res) => {
+  const user = req.user;
+  if (!user) {
+    throw new AppError("authentication required!", 401);
+  }
+  const { currentPassword, newPassword, confirmNewPassword } = req.body;
+  const verify = await user.comparePasswords(currentPassword);
+  if (!verify) {
+    throw new AppError("Invalid Password", 401);
+  }
+  user.password = newPassword;
+  user.confirmPassword = confirmNewPassword;
+  user.refreshToken = undefined;
+  await user.save();
+
+  clearAuthCookies(res);
+  res.status(200).json({
+    status: "success",
+    message: "password changed succesfully!",
+  });
+});
